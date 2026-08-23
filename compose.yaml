@@ -1,0 +1,35 @@
+services:
+  opencode:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: agent-sandbox/opencode
+    stdin_open: true
+    tty: true
+    user: "1000:1000"
+    userns_mode: keep-id
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges
+    command: ["--auto"]
+    working_dir: $PWD
+    volumes:
+      # --- workspace: mount host cwd at the same path (keeps git worktrees happy) ---
+      - $PWD:$PWD
+
+      # --- opencode config (skills come from host user config) ---
+      - /home/sroy/Codes/agent-sandbox/opencode/config:/home/coder/.config/opencode
+      - /home/sroy/.config/opencode/skills:/home/coder/.config/opencode/skills
+
+      # --- host credentials (ro) ---
+      - /home/sroy/.gitconfig:/home/coder/.gitconfig:ro
+
+      # --- opencode persistent state ---
+      - /home/sroy/Codes/agent-sandbox/opencode/state:/home/coder/.local/share/opencode
+      - /home/sroy/Codes/agent-sandbox/opencode/cache:/home/coder/.cache/opencode
+      - /home/sroy/Codes/agent-sandbox/opencode/tui-state:/home/coder/.local/state/opencode
+
+      # --- anonymous volumes inside state mount ---
+      - /home/coder/.local/share/opencode/repos
+      - /home/coder/.local/share/opencode/log
