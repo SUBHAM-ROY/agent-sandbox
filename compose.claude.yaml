@@ -1,0 +1,44 @@
+services:
+  agent-sandbox:
+    image: agent-sandbox:local
+    build:
+      context: .
+      dockerfile: Dockerfile.claude
+    user: "1000:1000" # non-root sandbox user
+    security_opt:
+      - no-new-privileges:true # block privilege escalation
+    cap_drop:
+      - ALL # no capabilities means no root-like syscalls
+    stdin_open: true # keeps stdin open for interactive input
+    tty: true # needed for claude/gh interactive prompts
+    working_dir: ${PWD} # start in repo, same path as host so worktree gitdir links resolve
+    command: claude --dangerously-skip-permissions # skip-permissions bypasses per-tool approval prompts
+    volumes:
+      # --- repo (cwd this compose file is invoked from), mounted at the same absolute path as the host so worktree gitdir links resolve ---
+      - ${PWD}:${PWD}:rw
+
+      # --- claude auth, config, and user-level customization, persisted on the host ---
+      - ${HOME}/.agent-sandbox/claude/.claude.json:/home/sandbox/.claude.json:rw
+      - ${HOME}/.agent-sandbox/claude/dotclaude:/home/sandbox/.claude:rw
+      - ${HOME}/.claude/skills:/home/sandbox/.claude/skills:ro
+      - ${HOME}/.claude/CLAUDE.md:/home/sandbox/.claude/CLAUDE.md:ro
+      - ${HOME}/.agent-sandbox/claude-projects:/home/sandbox/.claude/projects:rw
+      - ${HOME}/.agent-sandbox/gh:/home/sandbox/.config/gh:rw
+
+      # --- secrets shadowing: hide the host's root .env from the container ---
+      - /dev/null:${PWD}/.env:ro
+
+      # --- claude-generated ephemeral state: anonymous volumes, discarded with the container ---
+      - /home/sandbox/.claude/backups
+      - /home/sandbox/.claude/cache
+      - /home/sandbox/.claude/sessions
+      - /home/sandbox/.claude/file-history
+      - /home/sandbox/.claude/session-env
+      - /home/sandbox/.claude/shell-snapshots
+
+      # --- claude-generated ephemeral state: writes discarded outright ---
+      - /dev/null:/home/sandbox/.claude/history.jsonl
+      - /dev/null:/home/sandbox/.claude/policy-limits.json
+      - /dev/null:/home/sandbox/.claude/remote-settings.json
+      - /dev/null:/home/sandbox/.claude/remote-settings-consent.json
+      - /dev/null:/home/sandbox/.claude/.last-cleanup

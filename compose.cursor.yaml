@@ -1,0 +1,35 @@
+services:
+  cursor-sandbox:
+    image: cursor-sandbox:local
+    build:
+      context: .
+      dockerfile: Dockerfile.cursor
+    user: "1000:1000" # non-root sandbox user
+    security_opt:
+      - no-new-privileges:true # block privilege escalation
+    cap_drop:
+      - ALL # no capabilities means no root-like syscalls
+    stdin_open: true # keeps stdin open for interactive input
+    tty: true # needed for cursor-agent/gh interactive prompts
+    working_dir: ${PWD} # start in repo, same path as host so worktree gitdir links resolve
+    command: cursor-agent --force # force auto-approves actions unless explicitly denied
+    volumes:
+      # --- repo (cwd this compose file is invoked from), mounted at the same absolute path as the host so worktree gitdir links resolve ---
+      - ${PWD}:${PWD}:rw
+
+      # --- cursor auth, config, and user-level customization, persisted on the host ---
+      - ${HOME}/.agent-sandbox/cursor/config:/home/sandbox/.config/cursor:rw
+      - ${HOME}/.agent-sandbox/cursor/dotcursor:/home/sandbox/.cursor:rw
+      - ${HOME}/.cursor/skills:/home/sandbox/.cursor/skills:ro
+      - ${HOME}/.cursor/rules:/home/sandbox/.cursor/rules:ro
+      - ${HOME}/.agent-sandbox/cursor-projects:/home/sandbox/.cursor/projects:rw
+      - ${HOME}/.agent-sandbox/gh:/home/sandbox/.config/gh:rw
+
+      # --- secrets shadowing: hide the host's root .env from the container ---
+      - /dev/null:${PWD}/.env:ro
+
+      # --- cursor-generated ephemeral state: anonymous volumes, discarded with the container ---
+      - /home/sandbox/.cursor/ai-tracking
+
+      # --- cursor-generated ephemeral state: writes discarded outright ---
+      - /dev/null:/home/sandbox/.cursor/statsig-cache.json
