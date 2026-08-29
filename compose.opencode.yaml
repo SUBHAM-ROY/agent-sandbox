@@ -2,7 +2,7 @@ services:
   opencode:
     build:
       context: .
-      dockerfile: Containerfile
+      dockerfile: Dockerfile.opencode
     image: agent-sandbox/opencode
     stdin_open: true
     tty: true
@@ -12,6 +12,13 @@ services:
       - ALL
     security_opt:
       - no-new-privileges
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=128m
+      - /tmp/opencode:mode=1777,size=128m
+    mem_limit: 4g
+    cpus: 2
+    pids_limit: 256
     command: ["--auto"]
     working_dir: $PWD
     volumes:

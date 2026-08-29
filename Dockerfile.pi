@@ -1,0 +1,23 @@
+# pinned base image for reproducible builds
+FROM docker.io/library/node:24-bookworm-slim
+
+# system packages needed by the sandbox
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        fd-find \
+        gh \
+        git \
+        jq \
+        ripgrep \
+    && rm -rf /var/lib/apt/lists/* # drop apt cache to shrink image
+RUN ln -s /usr/bin/fdfind /usr/local/bin/fd # debian ships fd-find as `fdfind`
+
+# install Pi coding agent globally as root
+RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent
+
+# drop to unprivileged user from here on — use existing `node` user (uid 1000) from base image
+USER node
+
+# verify at build time so a bad install fails the image instead of surfacing at `docker run`
+RUN pi --version
