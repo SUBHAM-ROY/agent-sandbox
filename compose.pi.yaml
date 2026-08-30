@@ -13,7 +13,6 @@ services:
 
       # --- pi auth, config, and user-level customization, persisted on the host ---
       - ${HOME}/.agent-sandbox/pi/settings:/home/node/.pi/agent:rw
-      - ${HOME}/.agent-sandbox/pi/settings/extensions:/home/node/.pi/agent/extensions:ro
       - ${HOME}/.agent-sandbox/gh:/home/node/.config/gh:rw
       - ${HOME}/.gitconfig:/home/node/.gitconfig:ro
 

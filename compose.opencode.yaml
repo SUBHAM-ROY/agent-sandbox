@@ -11,17 +11,17 @@ services:
     command: ["--auto"]
     volumes:
 
-      # --- opencode config (skills come from host user config) ---
-      - /home/sroy/Codes/agent-sandbox/opencode/config:/home/coder/.config/opencode
-      - /home/sroy/.config/opencode/skills:/home/coder/.config/opencode/skills
-
       # --- host credentials (ro) ---
-      - /home/sroy/.gitconfig:/home/coder/.gitconfig:ro
+      - ${HOME}/.gitconfig:/home/coder/.gitconfig:ro
+
+      # --- opencode config (global, from ~/.agent-sandbox) ---
+      - ${HOME}/.agent-sandbox/opencode/config:/home/coder/.config/opencode:ro
+      - ${HOME}/.config/opencode/skills:/home/coder/.config/opencode/skills:ro
 
       # --- opencode persistent state ---
-      - /home/sroy/Codes/agent-sandbox/opencode/state:/home/coder/.local/share/opencode
-      - /home/sroy/Codes/agent-sandbox/opencode/cache:/home/coder/.cache/opencode
-      - /home/sroy/Codes/agent-sandbox/opencode/tui-state:/home/coder/.local/state/opencode
+      - ${HOME}/.agent-sandbox/opencode/state:/home/coder/.local/share/opencode
+      - ${HOME}/.agent-sandbox/opencode/cache:/home/coder/.cache/opencode
+      - ${HOME}/.agent-sandbox/opencode/tui-state:/home/coder/.local/state/opencode
 
       # --- anonymous volumes inside state mount ---
       - /home/coder/.local/share/opencode/repos
