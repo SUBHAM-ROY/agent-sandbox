@@ -1,22 +1,14 @@
 services:
   cursor-sandbox:
+    extends:
+      file: ./compose.common.yaml
+      service: base
     image: cursor-sandbox:local
     build:
       context: .
       dockerfile: Dockerfile.cursor
-    user: "1000:1000" # non-root sandbox user
-    security_opt:
-      - no-new-privileges:true # block privilege escalation
-    cap_drop:
-      - ALL # no capabilities means no root-like syscalls
-    stdin_open: true # keeps stdin open for interactive input
-    tty: true # needed for cursor-agent/gh interactive prompts
-    working_dir: ${PWD} # start in repo, same path as host so worktree gitdir links resolve
     command: cursor-agent --force # force auto-approves actions unless explicitly denied
     volumes:
-      # --- repo (cwd this compose file is invoked from), mounted at the same absolute path as the host so worktree gitdir links resolve ---
-      - ${PWD}:${PWD}:rw
-      - ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}:rw
 
       # --- cursor auth, config, and user-level customization, persisted on the host ---
       - ${HOME}/.agent-sandbox/cursor/config:/home/sandbox/.config/cursor:rw

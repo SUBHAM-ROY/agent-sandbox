@@ -1,22 +1,14 @@
 services:
   agent-sandbox:
+    extends:
+      file: ./compose.common.yaml
+      service: base
     image: agent-sandbox:local
     build:
       context: .
       dockerfile: Dockerfile.claude
-    user: "1000:1000" # non-root sandbox user
-    security_opt:
-      - no-new-privileges:true # block privilege escalation
-    cap_drop:
-      - ALL # no capabilities means no root-like syscalls
-    stdin_open: true # keeps stdin open for interactive input
-    tty: true # needed for claude/gh interactive prompts
-    working_dir: ${PWD} # start in repo, same path as host so worktree gitdir links resolve
     command: claude --dangerously-skip-permissions # skip-permissions bypasses per-tool approval prompts
     volumes:
-      # --- repo (cwd this compose file is invoked from), mounted at the same absolute path as the host so worktree gitdir links resolve ---
-      - ${PWD}:${PWD}:rw
-      - ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}:rw
 
       # --- claude auth, config, and user-level customization, persisted on the host ---
       - ${HOME}/.agent-sandbox/claude/.claude.json:/home/sandbox/.claude.json:rw

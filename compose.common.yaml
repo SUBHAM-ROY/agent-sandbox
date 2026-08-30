@@ -1,0 +1,19 @@
+services:
+  base:
+    user: "1000:1000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:mode=1777,size=512m
+    mem_limit: 4g
+    cpus: 2
+    pids_limit: 256
+    stdin_open: true
+    tty: true
+    working_dir: ${PWD}
+    volumes:
+      - ${PWD}:${PWD}:rw
+      - ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}:rw
