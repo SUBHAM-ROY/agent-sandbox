@@ -12,30 +12,24 @@ services:
       - ALL # no capabilities means no root-like syscalls
     read_only: true
     tmpfs:
-      - /tmp:mode=1777,size=128m
-      - /tmp/pi:mode=1777,size=128m
+      - /tmp:mode=1777,size=512m
     mem_limit: 4g
     cpus: 2
     pids_limit: 256
     stdin_open: true # keeps stdin open for interactive input
     tty: true # needed for pi/gh interactive prompts
-    environment:
-      - PI_TRUE_COLOR=1
     working_dir: ${PWD} # start in repo, same path as host so worktree gitdir links resolve
     command: pi
     volumes:
       # --- repo (cwd this compose file is invoked from), mounted at the same absolute path as the host so worktree gitdir links resolve ---
       - ${PWD}:${PWD}:rw
+      - ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}:rw
 
       # --- pi auth, config, and user-level customization, persisted on the host ---
       - ${HOME}/.agent-sandbox/pi/settings:/home/node/.pi/agent:rw
       - ${HOME}/.agent-sandbox/pi/settings/extensions:/home/node/.pi/agent/extensions:ro
-      - ${HOME}/.agent-sandbox/pi/context-mode:/home/node/.pi/context-mode:rw
       - ${HOME}/.agent-sandbox/gh:/home/node/.config/gh:rw
       - ${HOME}/.gitconfig:/home/node/.gitconfig:ro
-
-      # --- secrets shadowing: hide the host's root .env from the container ---
-      - /dev/null:${PWD}/.env:ro
 
       # --- pi-generated ephemeral state: anonymous volumes, discarded with the container ---
       - /home/node/.pi/agent/tmp

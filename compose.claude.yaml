@@ -16,6 +16,7 @@ services:
     volumes:
       # --- repo (cwd this compose file is invoked from), mounted at the same absolute path as the host so worktree gitdir links resolve ---
       - ${PWD}:${PWD}:rw
+      - ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}:rw
 
       # --- claude auth, config, and user-level customization, persisted on the host ---
       - ${HOME}/.agent-sandbox/claude/.claude.json:/home/sandbox/.claude.json:rw
@@ -24,9 +25,6 @@ services:
       - ${HOME}/.claude/CLAUDE.md:/home/sandbox/.claude/CLAUDE.md:ro
       - ${HOME}/.agent-sandbox/claude-projects:/home/sandbox/.claude/projects:rw
       - ${HOME}/.agent-sandbox/gh:/home/sandbox/.config/gh:rw
-
-      # --- secrets shadowing: hide the host's root .env from the container ---
-      - /dev/null:${PWD}/.env:ro
 
       # --- claude-generated ephemeral state: anonymous volumes, discarded with the container ---
       - /home/sandbox/.claude/backups
