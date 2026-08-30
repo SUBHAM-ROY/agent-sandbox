@@ -7,14 +7,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.pi
-    userns_mode: keep-id # map host uid 1000 
+    userns_mode: keep-id
     command: pi
     volumes:
-
-      # --- pi auth, config, and user-level customization, persisted on the host ---
+      # persisted on host
       - ${HOME}/.agent-sandbox/pi/settings:/home/node/.pi/agent:rw
       - ${HOME}/.agent-sandbox/gh:/home/node/.config/gh:rw
       - ${HOME}/.gitconfig:/home/node/.gitconfig:ro
 
-      # --- pi-generated ephemeral state: anonymous volumes, discarded with the container ---
+      # ephemeral, discarded with --rm
       - /home/node/.pi/agent/tmp
+      - /nix
