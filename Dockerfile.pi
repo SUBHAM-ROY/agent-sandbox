@@ -1,40 +1,6 @@
-FROM docker.io/library/node:24-bookworm-slim
+FROM agent-sandbox/base:latest
 
-# nix single-user, no daemon (ordered first to avoid cache invalidation)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        curl \
-        ca-certificates \
-        xz-utils \
-        libsqlite3-0 \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN mkdir -p /nix /etc/nix \
-    && printf '%s\n' \
-        'build-users-group =' \
-        'experimental-features = nix-command flakes' \
-        'sandbox = false' \
-        > /etc/nix/nix.conf \
-    && chown root:root /nix \
-    && curl --proto '=https' --tlsv1.2 -sSf -L https://nixos.org/nix/install | sh -s -- --no-daemon \
-    && chown -R node:node /nix
-
-ENV PATH=/nix/var/nix/profiles/default/bin:$PATH
-
-RUN nix --version
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        git \
-        gh \
-        python3 \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN npm install -g --ignore-scripts @earendil-works/pi-coding-agent
-
-USER node
-
-# nix state on writable tmp (rootfs read-only, discarded with --rm)
 ENV PI_TRUE_COLOR=1
-ENV XDG_CACHE_HOME=/home/node/.pi/agent/tmp/nix-cache
-ENV XDG_STATE_HOME=/home/node/.pi/agent/tmp/nix-state
 
-RUN pi --version
+USER sandbox
+RUN curl -fsSL https://pi.dev/install.sh | sh

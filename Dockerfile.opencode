@@ -1,13 +1,6 @@
-FROM ghcr.io/anomalyco/opencode:latest
+FROM agent-sandbox/base:latest
 
-RUN apk add --no-cache \
-    git \
-    luajit \
-    fd \
-    jq \
-    python3
+USER sandbox
+RUN curl -fsSL https://opencode.ai/install | bash
 
-RUN adduser -D -u 1000 coder
-
-USER coder
-RUN mkdir -p /home/coder/.local/state /home/coder/.local/share/opencode
+ENV PATH=/home/sandbox/.opencode/bin:$PATH

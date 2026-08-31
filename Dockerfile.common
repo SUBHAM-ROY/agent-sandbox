@@ -1,0 +1,54 @@
+FROM docker.io/library/node:24-trixie-slim
+
+# --- nix single-user, no daemon (keep first for cache) ---
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        ca-certificates \
+        xz-utils \
+        libsqlite3-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /nix /etc/nix \
+    && printf '%s\n' \
+        'build-users-group =' \
+        'experimental-features = nix-command flakes' \
+        'sandbox = false' \
+        > /etc/nix/nix.conf \
+    && chown root:root /nix \
+    && curl --proto '=https' --tlsv1.2 -sSf -L https://nixos.org/nix/install | sh -s -- --no-daemon \
+    && chown -R 1000:1000 /nix
+
+ENV PATH=/nix/var/nix/profiles/default/bin:/home/sandbox/.local/bin:$PATH
+
+RUN nix --version
+
+# --- basic tools via apt (replaces nix profile — survives read-only rootfs / anon volumes) ---
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git \
+        gh \
+        jq \
+        ripgrep \
+        fd-find \
+        python3 \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -sf /usr/bin/fdfind /usr/local/bin/fd
+
+# --- handle node image's pre-existing `node` user (uid 1000) ---
+RUN if id node >/dev/null 2>&1; then userdel -r node 2>/dev/null || userdel node 2>/dev/null || true; fi \
+    && if getent group node >/dev/null 2>&1; then groupdel node 2>/dev/null || true; fi
+
+# --- system user (uid 1000, keep-id compatible) ---
+RUN useradd --create-home --uid 1000 --shell /bin/bash sandbox
+
+USER sandbox
+
+# nix profile state on writable tmp (rootfs read-only, discarded with --rm)
+ENV XDG_CACHE_HOME=/home/sandbox/.cache/nix-cache
+ENV XDG_STATE_HOME=/home/sandbox/.local/state/nix-state
+ENV XDG_CONFIG_HOME=/home/sandbox/.config
+
+# --- agents via nix (uncomment per agent image, or keep here for a fat base) ---
+# RUN nix profile add nixpkgs#pi-coding-agent      # -> bin/pi
+# RUN nix profile add nixpkgs#claude-code           # -> bin/claude
+# RUN nix profile add nixpkgs#cursor-cli            # -> bin/cursor-agent
+# RUN nix profile add nixpkgs#opencode              # -> bin/opencode

@@ -1,29 +1,4 @@
-# pinned base image for reproducible builds
-FROM docker.io/library/python:3.12-slim
+FROM agent-sandbox/base:latest
 
-# system packages needed by the sandbox
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        git \
-        npm \
-        gh \
-        jq \
-        ripgrep \
-        fd-find \
-    && rm -rf /var/lib/apt/lists/* # drop apt cache to shrink image
-RUN ln -s /usr/bin/fdfind /usr/local/bin/fd # debian ships fd-find as `fdfind`
-
-# install Claude Code globally as root
-# engine-strict override: base image ships Node 20, claude-code wants >=22
-RUN npm install -g --engine-strict=false @anthropic-ai/claude-code
-
-# ruff/mypy for a real lint pass inside the sandbox without a full `uv sync` of project deps
-RUN pip install --no-cache-dir ruff mypy
-
-# non-root user to run the agent as
-RUN useradd --create-home --uid 1000 --shell /bin/bash sandbox
-
-# drop to unprivileged user from here on
 USER sandbox
-
-# verify at build time so a bad install fails the image instead of surfacing at `docker run`
-RUN claude --version
+RUN curl -fsSL https://claude.ai/install.sh | bash

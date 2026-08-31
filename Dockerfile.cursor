@@ -1,30 +1,4 @@
-# pinned base image for reproducible builds
-FROM docker.io/library/python:3.12-slim
+FROM agent-sandbox/base:latest
 
-# system packages needed by the sandbox
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        git \
-        npm \
-        gh \
-        jq \
-        ripgrep \
-        fd-find \
-        curl \
-    && rm -rf /var/lib/apt/lists/* # drop apt cache to shrink image
-RUN ln -s /usr/bin/fdfind /usr/local/bin/fd # debian ships fd-find as `fdfind`
-
-# ruff/mypy for a real lint pass inside the sandbox without a full `uv sync` of project deps
-RUN pip install --no-cache-dir ruff mypy
-
-# non-root user to run the agent as
-RUN useradd --create-home --uid 1000 --shell /bin/bash sandbox
-
-# drop to unprivileged user from here on
 USER sandbox
-
-# install Cursor CLI (cursor-agent); upstream ships no npm/pip package, only this installer script
-RUN curl -fsS https://cursor.com/install | bash
-ENV PATH="/home/sandbox/.local/bin:${PATH}"
-
-# verify at build time so a bad install fails the image instead of surfacing at `docker run`
-RUN cursor-agent --version
+RUN curl https://cursor.com/install -fsS | bash

@@ -3,7 +3,7 @@ services:
     extends:
       file: ./compose.common.yaml
       service: base
-    image: pi-sandbox:local
+    image: agent-sandbox/pi:latest
     build:
       context: .
       dockerfile: Dockerfile.pi
@@ -11,10 +11,11 @@ services:
     command: pi
     volumes:
       # persisted on host
-      - ${HOME}/.agent-sandbox/pi/settings:/home/node/.pi/agent:rw
-      - ${HOME}/.agent-sandbox/gh:/home/node/.config/gh:rw
-      - ${HOME}/.gitconfig:/home/node/.gitconfig:ro
+      - ${HOME}/.agent-sandbox/pi/settings:/home/sandbox/.pi/agent:rw
+      - ./pi/APPEND_SYSTEM.md:/home/sandbox/.pi/agent/APPEND_SYSTEM.md:rw
+      - ./pi/skills:/home/sandbox/.pi/agent/skills:rw
+      - ${HOME}/.agent-sandbox/gh:/home/sandbox/.config/gh:ro
+      - ${HOME}/.gitconfig:/home/sandbox/.gitconfig:ro
 
-      # ephemeral, discarded with --rm
-      - /home/node/.pi/agent/tmp
-      - /nix
+      # ephemeral, discarded with --rm (pi tmp; nix via compose.common base)
+      - /home/sandbox/.pi/agent/tmp

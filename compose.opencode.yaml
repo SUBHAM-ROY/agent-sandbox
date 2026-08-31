@@ -6,23 +6,24 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.opencode
-    image: agent-sandbox/opencode
+    image: agent-sandbox/opencode:latest
     userns_mode: keep-id
-    command: ["--auto"]
+    command: ["opencode", "--auto"]
     volumes:
 
       # --- host credentials (ro) ---
-      - ${HOME}/.gitconfig:/home/coder/.gitconfig:ro
+      - ${HOME}/.gitconfig:/home/sandbox/.gitconfig:ro
 
       # --- opencode config (global, from ~/.agent-sandbox) ---
-      - ${HOME}/.agent-sandbox/opencode/config:/home/coder/.config/opencode:ro
-      - ${HOME}/.config/opencode/skills:/home/coder/.config/opencode/skills:ro
+      - ${HOME}/.agent-sandbox/opencode/config:/home/sandbox/.config/opencode:ro
+      - ${HOME}/.config/opencode/skills:/home/sandbox/.config/opencode/skills:ro
 
       # --- opencode persistent state ---
-      - ${HOME}/.agent-sandbox/opencode/state:/home/coder/.local/share/opencode
-      - ${HOME}/.agent-sandbox/opencode/cache:/home/coder/.cache/opencode
-      - ${HOME}/.agent-sandbox/opencode/tui-state:/home/coder/.local/state/opencode
+      - ${HOME}/.agent-sandbox/opencode/state:/home/sandbox/.local/share/opencode
+      - ${HOME}/.agent-sandbox/opencode/cache:/home/sandbox/.cache/opencode
+      - ${HOME}/.agent-sandbox/opencode/tui-state:/home/sandbox/.local/state/opencode
 
-      # --- anonymous volumes inside state mount ---
-      - /home/coder/.local/share/opencode/repos
-      - /home/coder/.local/share/opencode/log
+      # --- anonymous volumes inside state mount (nix via compose.common base) ---
+      - /home/sandbox/.local/share/opencode/repos
+      - /home/sandbox/.local/share/opencode/log
+      - /home/sandbox/.opencode

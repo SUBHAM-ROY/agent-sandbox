@@ -3,7 +3,7 @@ services:
     extends:
       file: ./compose.common.yaml
       service: base
-    image: agent-sandbox:local
+    image: agent-sandbox/claude:latest
     build:
       context: .
       dockerfile: Dockerfile.claude

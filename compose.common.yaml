@@ -17,3 +17,8 @@ services:
     volumes:
       - ${PWD}:${PWD}:rw
       - ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}:rw
+
+      # nix state (rootfs read-only) — shared by all agents
+      - /home/sandbox/.cache
+      - /home/sandbox/.local/state
+      - /nix

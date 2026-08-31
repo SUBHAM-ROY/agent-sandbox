@@ -3,7 +3,7 @@ services:
     extends:
       file: ./compose.common.yaml
       service: base
-    image: cursor-sandbox:local
+    image: agent-sandbox/cursor:latest
     build:
       context: .
       dockerfile: Dockerfile.cursor
