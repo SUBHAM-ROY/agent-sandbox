@@ -36,4 +36,12 @@ if [[ -e "$PWD/.env" ]]; then
   ENV_VOL=(--volume "/dev/null:${PWD}/.env:ro")
 fi
 
-exec docker compose -f "$COMPOSE_FILE" run --rm "${ENV_VOL[@]}" "$SERVICE" "$@"
+cleanup() {
+  if command -v podman >/dev/null 2>&1; then
+    podman volume prune --force >/dev/null 2>&1 || true
+  fi
+}
+# podman-compose leaks anonymous volumes on `run --rm`; sweep them on exit
+trap cleanup EXIT
+
+docker compose -f "$COMPOSE_FILE" run --rm "${ENV_VOL[@]}" "$SERVICE" "$@"
