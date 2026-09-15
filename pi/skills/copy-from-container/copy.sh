@@ -6,11 +6,11 @@ set -eu
 if [ "${1:-}" = "--file" ] || [ "${1:-}" = "-f" ]; then
   [ $# -lt 2 ] && { echo "copy.sh: --file needs a path" >&2; exit 1; }
   [ -f "$2" ] || { echo "copy.sh: not found: $2" >&2; exit 1; }
-  data=$(cat -- "$2")
+  data=$(python3 -c 'import sys; s=sys.stdin.buffer.read().replace(b"\r\n",b"\n").replace(b"\r",b"\n").rstrip(b"\n"); sys.stdout.buffer.write(s)' < "$2")
 elif [ $# -gt 0 ]; then
-  data="$*"
+  data=$(printf '%s' "$*" | python3 -c 'import sys; s=sys.stdin.buffer.read().replace(b"\r\n",b"\n").replace(b"\r",b"\n").rstrip(b"\n"); sys.stdout.buffer.write(s)')
 else
-  data=$(cat)
+  data=$(python3 -c 'import sys; s=sys.stdin.buffer.read().replace(b"\r\n",b"\n").replace(b"\r",b"\n").rstrip(b"\n"); sys.stdout.buffer.write(s)')
 fi
 
 if [ -z "$data" ]; then
@@ -18,16 +18,16 @@ if [ -z "$data" ]; then
   exit 1
 fi
 
-b64=$(printf '%s' "$data" | base64 | tr -d '\n')
-
-tty_target="/dev/pts/0"
-if [ ! -w "$tty_target" ]; then
-  tty_target="/dev/stdout"
+tty_path=$(readlink /proc/1/fd/0 || true)
+if [ -z "$tty_path" ] || [ ! -w "$tty_path" ]; then
+  echo "copy.sh: no writable tty at /proc/1/fd/0" >&2
+  exit 1
 fi
 
-printf '\033]52;c;%s\a' "$b64" > "$tty_target"
-printf '\033Ptmux;\033\033]52;c;%s\a\033\\' "$b64" > "$tty_target"
+b64=$(printf '%s' "$data" | base64 -w0)
+n=$(printf '%s' "$data" | wc -c)
 
-if [ "$tty_target" = "/dev/stdout" ]; then printf '\n'; fi
+printf '\033]52;c;%s\a' "$b64" > "$tty_path"
+printf '\033Ptmux;\033\033]52;c;%s\a\033\\' "$b64" > "$tty_path"
 
-echo "copy: $(printf '%s' "$data" | wc -c) bytes -> host clipboard" >&2
+echo "copy: $n bytes -> host clipboard" >&2

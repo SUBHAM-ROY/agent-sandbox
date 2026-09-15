@@ -42,6 +42,9 @@ RUN useradd --create-home --uid 1000 --shell /bin/bash sandbox
 
 USER sandbox
 
+RUN printf '\n%s\n' 'export PATH="/nix/var/nix/profiles/default/bin:$PATH"' \
+        >> /home/sandbox/.profile
+
 # nix profile state on writable tmp (rootfs read-only, discarded with --rm)
 ENV XDG_CACHE_HOME=/home/sandbox/.cache/nix-cache
 ENV XDG_STATE_HOME=/home/sandbox/.local/state/nix-state

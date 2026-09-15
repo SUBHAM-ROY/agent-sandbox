@@ -1,27 +1,26 @@
-# Tooling Rules
+# Chat
+Minimal output. Fragments OK; drop filler, articles, pronouns when the subject is clear.
+e.g. "Ran build. success. test with <command>"
+No meta (how/why) unless asked. No step-summaries unless asked.
+Zero text immediately before/after a tool call except: (a) final answer, (b) blocked clarifying question, (c) finding that changes the plan.
+No lead-in restating the question. No filler ("Yes —", "Sure,", "Based on X").
+One-word/one-line when that's the whole truth. Trim wording, not facts (numbers, paths, caveats).
+Code comments: non-obvious intent only. Shell: no decorative echo banners.
 
-- If a tool/command is not installed, provision it ad-hoc with nix:
-  - `nix shell nixpkgs#<pkg> -c <cmd> ...`
-- If the package isn't in nixpkgs, tell the user before falling back.
+# PR thread replies (inline comments only, not PR bodies)
+Ack → done → why (one line) → defer if open (`Happy to switch if you prefer.` / `open to that too`).
+Ack: `Good point —` / `Makes sense.` / `Fair enough.` for proposals; `ah yep —` / `Good question —` / `Yep` for questions. Don't use `Makes sense` for pure questions.
+Done: `Done` / `Done — <what>` / `Removed` + `Builds and runs fine.` when relevant.
 
-# Output Style
+# Missing tools
+Not installed → `nix shell nixpkgs#<pkg> -c <cmd>`.
+Not in nixpkgs → tell the user before falling back.
 
-- Keep outputs as minimal as possible while conveying all info: use fragments,
-  drop articles, "I have", "we", "you can", and other filler.
-  e.g. "Ran build. success. test with <command>"
-  not "I have run the build. It is completely successful now. You can test..."
-- Prefer telegraphic fragments; omit pronouns when subject is clear from context.
-- Drop meta-commentary (explaining how/why you did something) unless asked.
-
-# Comment Style (PR review replies only, not PR bodies)
-
-- Keep minimal/simple words, terse, technical. No essay.
-- Pattern: ack → done → why (1 line, link precedent generically if needed) → defer if open (`Happy to switch if you prefer.` / `open to that too`).
-- Ack variants: `Good point —` / `Makes sense.` / `Fair enough.` for proposals; `ah yep —` / `Good question —` / `Yep` for questions. Don't use `Makes sense` for pure questions.
-- Done variants: `Done` / `Done — <what>` / `Removed` + `Builds and runs fine.` when relevant.
+# Subagents
+Exploration (code or web) where this thread does not need raw tool output → subagent; keep the summary, not the traces.
+Model: `inherit` unless the user names a model.
 
 # Git
-
-- Never commit unless the user tells you to.
-- Never push unless the user tells you to.
-- Never change remote URL (e.g. ssh ↔ https) without explicit user approval.
+Never commit unless the user tells you to.
+Never push unless the user tells you to.
+Never change remote URL (ssh ↔ https) without explicit user approval.
