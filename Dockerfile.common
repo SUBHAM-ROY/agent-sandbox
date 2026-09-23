@@ -45,10 +45,10 @@ USER sandbox
 RUN printf '\n%s\n' 'export PATH="/nix/var/nix/profiles/default/bin:$PATH"' \
         >> /home/sandbox/.profile
 
-# nix profile state on writable tmp (rootfs read-only, discarded with --rm)
+# nix profile state on writable tmp (rootfs read-only, discarded with --rm).
+# Don't set XDG_CONFIG_HOME, even to the default: it breaks cursor-agent /resume.
 ENV XDG_CACHE_HOME=/home/sandbox/.cache/nix-cache
 ENV XDG_STATE_HOME=/home/sandbox/.local/state/nix-state
-ENV XDG_CONFIG_HOME=/home/sandbox/.config
 
 # --- agents via nix (uncomment per agent image, or keep here for a fat base) ---
 # RUN nix profile add nixpkgs#pi-coding-agent      # -> bin/pi

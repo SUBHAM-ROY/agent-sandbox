@@ -16,7 +16,7 @@ services:
 
       # --- opencode config (global, from ~/.agent-sandbox) ---
       - ${HOME}/.agent-sandbox/opencode/config:/home/sandbox/.config/opencode:ro
-      - ${HOME}/.config/opencode/skills:/home/sandbox/.config/opencode/skills:ro
+      - ${HOME}/dotfiles/nix/home-manager/agents/skills:/home/sandbox/.config/opencode/skills:ro
 
       # --- opencode persistent state ---
       - ${HOME}/.agent-sandbox/opencode/state:/home/sandbox/.local/share/opencode

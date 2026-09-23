@@ -12,8 +12,7 @@ services:
     volumes:
       # persisted on host
       - ${HOME}/.agent-sandbox/pi/settings:/home/sandbox/.pi/agent:rw
-      - ./pi/APPEND_SYSTEM.md:/home/sandbox/.pi/agent/APPEND_SYSTEM.md:rw
-      - ./pi/skills:/home/sandbox/.pi/agent/skills:rw
+      - ${HOME}/dotfiles/nix/home-manager/agents/skills:/home/sandbox/.pi/agent/skills:rw
       - ${HOME}/.agent-sandbox/gh:/home/sandbox/.config/gh:ro
       - ${HOME}/.gitconfig:/home/sandbox/.gitconfig:ro
 

@@ -1,44 +1,55 @@
 # agent-sandbox
 
-Sandboxed opencode environment running in a rootless-ish Podman/Docker container with dropped capabilities, no-new-privileges, and a keep-id user mapping.
+Coding agents (mainly [pi](https://pi.dev), plus opencode) in a locked-down container: non-root uid 1000, all capabilities dropped, `no-new-privileges`, read-only rootfs, and CPU/memory/pid limits. Works with Docker or Podman (via the `docker` CLI shim).
 
 ## Layout
 
-- `Containerfile` — image based on `ghcr.io/anomalyco/opencode:latest`, adds git, luajit, fd, jq, python3, and the `coder` user (uid 1000).
-- `compose.yaml` — service definition and all volume mounts.
-- `opencode/` — persistent container-side state (config, state, cache, TUI state). Gitignored.
-
-## What gets mounted
-
-| Host | Container | Purpose |
-|---|---|---|
-| `$PWD` | `$PWD` | Workspace at the same path (keeps git worktrees happy) |
-| `./opencode/config` | `/home/coder/.config/opencode` | opencode config |
-| `~/.config/opencode/skills` | `/home/coder/.config/opencode/skills` | Skills (single source of truth in host user config) |
-| `~/.gitconfig` | `/home/coder/.gitconfig` (ro) | Git identity |
-| `./opencode/state` | `/home/coder/.local/share/opencode` | Persistent opencode state |
-| `./opencode/cache` | `/home/coder/.cache/opencode` | Cache |
-| `./opencode/tui-state` | `/home/coder/.local/state/opencode` | TUI state |
-
-Anonymous volumes inside the state mount: `/home/coder/.local/share/opencode/repos` and `/home/coder/.local/share/opencode/log`.
+- `Dockerfile.common` — base image (`agent-sandbox/base`): Debian + single-user Nix, git, gh, jq, ripgrep, fd, python3.
+- `Dockerfile.<agent>` — one thin layer per agent on top of the base: `pi`, `opencode`, `claude`, `cursor`.
+- `compose.common.yaml` — shared hardening, limits, workspace mount, tmpfs.
+- `compose.<agent>.yaml` — per-agent config/state mounts.
+- `build.sh` — builds the base, then the requested agent images.
+- `run-container.sh` — runs an agent against the current directory.
 
 ## Setup
 
 ```bash
-cd agent-sandbox
-podman compose build   # or: docker compose build
+./build.sh                  # base + pi + opencode
+./build.sh claude cursor    # base + any other agents
 
-# create the persistent dirs if they don't exist yet
-mkdir -p opencode/config opencode/state opencode/cache opencode/tui-state
+mkdir -p ~/.agent-sandbox/pi/settings \
+         ~/.agent-sandbox/gh \
+         ~/.agent-sandbox/opencode/config/skills \
+         ~/.agent-sandbox/opencode/{state,cache,tui-state}
 ```
+
+`opencode/config/skills` must exist up front: the config dir is mounted read-only, so the runtime can't create the skills mount point inside it.
 
 ## Run
 
-Run from any project directory — it is mounted as the workspace:
+From any project directory:
 
 ```bash
-cd ~/Codes/some-project
-podman compose -f ~/Codes/agent-sandbox/compose.yaml run --rm opencode
+~/Codes/agent-sandbox/run-container.sh pi
+~/Codes/agent-sandbox/run-container.sh opencode
 ```
 
-The container starts opencode with `--auto` in an interactive TTY session.
+Extra args are passed to the agent's command. The container is removed on exit.
+
+## Mounts
+
+Every agent gets:
+
+- `$PWD` at the same absolute path, plus the repo's git common dir, so linked worktrees resolve.
+- `.env` in `$PWD` masked with `/dev/null`, so secrets aren't readable.
+- tmpfs for `/tmp`, `~/.cache`, `~/.local/state`, and an anonymous volume for `/nix`, all discarded on exit.
+
+Skills and personal rules live in my dotfiles (`~/dotfiles/nix/home-manager/agents/skills`) and are mounted into pi (read-write) and opencode (read-only). Rules are a `user-rules` skill, not a system-prompt file.
+
+| Agent | Host | Container |
+|---|---|---|
+| pi | `~/.agent-sandbox/pi/settings` | `~/.pi/agent` |
+| pi | `~/.agent-sandbox/gh` (ro) | `~/.config/gh` |
+| opencode | `~/.agent-sandbox/opencode/config` (ro) | `~/.config/opencode` |
+| opencode | `~/.agent-sandbox/opencode/{state,cache,tui-state}` | opencode's data, cache, and TUI state dirs |
+| both | `~/.gitconfig` (ro) | `~/.gitconfig` |
