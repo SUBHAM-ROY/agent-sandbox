@@ -16,8 +16,9 @@ services:
     volumes:
       - ${PWD}:${PWD}:rw
       - ${GIT_COMMON_DIR}:${GIT_COMMON_DIR}:rw
+      # nix cache/state on disk, not tmpfs
+      - /home/sandbox/.cache
+      - /home/sandbox/.local/state
       - /nix
     tmpfs:
       - /tmp:mode=1777,size=512m
-      - /home/sandbox/.cache:mode=1777,size=1g
-      - /home/sandbox/.local/state:mode=1777,size=512m
